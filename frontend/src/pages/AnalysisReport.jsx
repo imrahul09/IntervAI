@@ -1,0 +1,246 @@
+import { useAuth } from "../context/AuthContext";
+import { useState, useEffect } from "react";
+import API from "../services/api";
+import { useParams, useNavigate } from "react-router-dom";
+
+const CARD = "rounded-2xl border border-[#D9D6F5] bg-white p-6";
+
+const Count = ({ n }) => (
+  <span className="font-mono text-xs tabular-nums text-[#6B6E96]">{n}</span>
+);
+
+const Shell = ({ onBack, children }) => (
+  <div className="min-h-screen bg-[#F6F5FF] font-[DM_Sans] text-[#14163A]">
+    <div className="mx-auto max-w-5xl px-6 pb-24 sm:px-8">
+      <header className="flex h-16 items-center justify-between">
+        <span className="text-lg font-medium">IntervAI</span>
+        <button
+          onClick={onBack}
+          className="text-sm text-[#5B5E8A] transition-colors hover:text-[#14163A]"
+        >
+          ← Back to history
+        </button>
+      </header>
+      {children}
+    </div>
+  </div>
+);
+
+const AnalysisSection = ({ title, items = [], dot }) => {
+  return (
+    <div className={CARD}>
+      <div className="mb-5 flex items-baseline justify-between">
+        <h2 className="text-base font-medium">{title}</h2>
+        <Count n={items.length} />
+      </div>
+
+      {items.length > 0 ? (
+        <ul className="space-y-3">
+          {items.map((item, index) => (
+            <li
+              key={index}
+              className="flex items-start gap-3 text-sm leading-6 text-[#3E4170]"
+            >
+              <span
+                className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${dot}`}
+              />
+              {item}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-[#5B5E8A]">No data available.</p>
+      )}
+    </div>
+  );
+};
+
+const SkillChips = ({ title, items = [], chip }) => (
+  <div className={CARD}>
+    <div className="mb-5 flex items-baseline justify-between">
+      <h2 className="text-base font-medium">{title}</h2>
+      <Count n={items.length} />
+    </div>
+    {items.length > 0 ? (
+      <div className="flex flex-wrap gap-2">
+        {items.map((skill, index) => (
+          <span
+            key={index}
+            className={`rounded-full border px-3 py-1 text-sm ${chip}`}
+          >
+            {skill}
+          </span>
+        ))}
+      </div>
+    ) : (
+      <p className="text-sm text-[#5B5E8A]">No data available.</p>
+    )}
+  </div>
+);
+
+const AnalysisReport = () => {
+  const { id } = useParams(); // it extract the dynamic id from the url
+  const navigate = useNavigate();
+  const { token } = useAuth();
+
+  const [analysis, setAnalysis] = useState(null); // null until the report loads
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const fetchReport = async () => {
+      try {
+        const response = await API.get(`/analysis/history/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setAnalysis(response.data.analysis);
+      } catch (error) {
+        console.error("Report fetch error", error);
+        setMessage(
+          error.response?.data?.message || "Failed to load analysis report",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token && id) {
+      fetchReport();
+    } else {
+      setLoading(false);
+    }
+  }, [id, token]);
+
+  const goBack = () => navigate("/analysis-history");
+
+  if (loading) {
+    return (
+      <Shell onBack={goBack}>
+        <p className="mt-12 text-sm text-[#5B5E8A]">Loading report</p>
+      </Shell>
+    );
+  }
+
+  if (message || !analysis) {
+    return (
+      <Shell onBack={goBack}>
+        <div className={`${CARD} mt-12 max-w-md`}>
+          <p role="alert" className="text-sm text-[#B45309]">
+            {message || "Analysis report not found"}
+          </p>
+          <button
+            onClick={goBack}
+            className="mt-5 h-10 rounded-lg border border-[#D9D6F5] px-4 text-sm font-medium transition-[transform,background-color] hover:bg-[#EEECFF] active:scale-[0.98]"
+          >
+            Back to history
+          </button>
+        </div>
+      </Shell>
+    );
+  }
+
+  const score = Math.min(100, Math.max(0, Number(analysis.matchScore) || 0));
+  const scoreLabel =
+    score >= 80
+      ? "Excellent match"
+      : score >= 60
+        ? "Good match"
+        : score >= 40
+          ? "Moderate match"
+          : "Needs improvement";
+  // accepts either spelling in case the backend field differs
+  const weakness =
+    analysis.weakness || analysis.weaknesss || analysis.weaknesses || [];
+
+  return (
+    <Shell onBack={goBack}>
+      {/* Header */}
+      <div className="mb-12 mt-12">
+        <h1 className="text-4xl font-medium leading-[1.15]">Analysis report</h1>
+        <p className="mt-3 text-lg text-[#5B5E8A]">
+          {analysis.resume?.fileName || "Resume unavailable"}
+        </p>
+        <p className="mt-1 font-mono text-xs tabular-nums text-[#6B6E96]">
+          Analyzed {new Date(analysis.createdAt).toLocaleDateString()}
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        {/* Match score */}
+        <div className={`${CARD} flex flex-wrap items-center gap-x-10 gap-y-5`}>
+          <div>
+            <h2 className="text-sm text-[#5B5E8A]">Resume match score</h2>
+            <p className="mt-1 font-mono text-5xl font-medium tabular-nums leading-none">
+              {score}%
+            </p>
+          </div>
+          <div className="min-w-50 flex-1">
+            <p className="mb-2 text-sm font-medium">{scoreLabel}</p>
+            <div className="h-1.5 overflow-hidden rounded-full bg-[#EEECFF]">
+              <div
+                className="h-full rounded-full bg-[#5B3FE0] transition-all"
+                style={{ width: `${score}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Skills */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <SkillChips
+            title="Matched skills"
+            items={analysis.matchedSkills}
+            chip="border-[#059669]/40 text-[#059669]"
+          />
+          <SkillChips
+            title="Missing skills"
+            items={analysis.missingSkills}
+            chip="border-[#B45309]/40 text-[#B45309]"
+          />
+        </div>
+
+        {/* Strengths and weakness */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <AnalysisSection
+            title="Strengths"
+            items={analysis.strengths}
+            dot="bg-[#059669]"
+          />
+          <AnalysisSection
+            title="Weaknesses"
+            items={weakness}
+            dot="bg-[#B45309]"
+          />
+        </div>
+
+        {/* Suggestions */}
+        <div className={CARD}>
+          <div className="mb-5 flex items-baseline justify-between">
+            <h2 className="text-base font-medium">Improvement suggestions</h2>
+            <Count n={analysis.suggestions?.length || 0} />
+          </div>
+
+          {analysis.suggestions?.length > 0 ? (
+            <ol className="space-y-4">
+              {analysis.suggestions.map((suggestion, index) => (
+                <li
+                  key={index}
+                  className="flex gap-4 text-sm leading-6 text-[#3E4170]"
+                >
+                  <span className="w-5 shrink-0 font-mono text-xs leading-6 tabular-nums text-[#5B3FE0]">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  {suggestion}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="text-sm text-[#5B5E8A]">No suggestions available</p>
+          )}
+        </div>
+      </div>
+    </Shell>
+  );
+};
+export default AnalysisReport;

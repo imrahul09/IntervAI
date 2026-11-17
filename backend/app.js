@@ -22,6 +22,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/analysis", analysisRoutes);
+app.use("/api/analysis", analysisRoutes);
 
 app.get("/", (req, res) => {
   res.json({

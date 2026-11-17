@@ -28,6 +28,37 @@ const analysisSchema = new mongoose.Schema(
     strengths: [String],
     weakness: [String],
     suggestions: [String],
+
+    technicalQuestions: [
+      {
+        question: {
+          type: String,
+        },
+        topic: {
+          type: String,
+        },
+        difficulty: {
+          type: String,
+        },
+        relevance: {
+          type: String,
+        },
+      },
+    ],
+
+    hrQuestions: [
+      {
+        question: {
+          type: String,
+        },
+        category: {
+          type: String,
+        },
+        relevance: {
+          type: String,
+        },
+      },
+    ],
   },
   { timestamps: true },
 );

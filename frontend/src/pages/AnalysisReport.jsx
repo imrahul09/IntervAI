@@ -87,6 +87,14 @@ const AnalysisReport = () => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
+  const [questions, setQuestions] = useState({
+    technicalQuestions: [],
+    hrQuestions: [],
+  });
+  const [questionsLoading, setQuestionsLoading] = useState(false);
+  const [questionsMessage, setQuestionsMessage] = useState("");
+  const [activeTab, setActiveTab] = useState("technical");
+
   useEffect(() => {
     const fetchReport = async () => {
       try {
@@ -113,6 +121,37 @@ const AnalysisReport = () => {
   }, [id, token]);
 
   const goBack = () => navigate("/analysis-history");
+
+  const generateQuestions = async () => {
+    try {
+      setQuestionsLoading(true);
+      setQuestionsMessage("");
+
+      const response = await API.post(
+        `/analysis/${id}/interview-questions`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      setQuestions({
+        technicalQuestions: response.data.data.technicalQuestions || [],
+        hrQuestions: response.data.data.hrQuestions || [],
+      });
+    } catch (error) {
+      console.error("Question generation error:", error);
+
+      setQuestionsMessage(
+        error.response?.data?.message ||
+          "Failed to generate interview questions.",
+      );
+    } finally {
+      setQuestionsLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -237,6 +276,101 @@ const AnalysisReport = () => {
             </ol>
           ) : (
             <p className="text-sm text-[#5B5E8A]">No suggestions available</p>
+          )}
+        </div>
+
+        {/* Interview Questions */}
+        <div className={CARD}>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-medium">Interview Preparation</h2>
+              <p className="mt-1 text-sm text-[#5B5E8A]">
+                Personalized questions based on your resume and job description.
+              </p>
+            </div>
+
+            <button
+              onClick={generateQuestions}
+              disabled={questionsLoading}
+              className="rounded-lg bg-[#5B3FE0] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#4930C5] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {questionsLoading ? "Generating..." : "Generate Questions"}
+            </button>
+          </div>
+
+          {questionsMessage && (
+            <p className="mt-4 text-sm text-[#B45309]" role="alert">
+              {questionsMessage}
+            </p>
+          )}
+
+          {(questions.technicalQuestions.length > 0 ||
+            questions.hrQuestions.length > 0) && (
+            <div className="mt-7">
+              <div className="flex gap-6 border-b border-[#D9D6F5]">
+                <button
+                  onClick={() => setActiveTab("technical")}
+                  className={`pb-3 text-sm font-medium ${
+                    activeTab === "technical"
+                      ? "border-b-2 border-[#5B3FE0] text-[#5B3FE0]"
+                      : "text-[#5B5E8A]"
+                  }`}
+                >
+                  Technical ({questions.technicalQuestions.length})
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("hr")}
+                  className={`pb-3 text-sm font-medium ${
+                    activeTab === "hr"
+                      ? "border-b-2 border-[#5B3FE0] text-[#5B3FE0]"
+                      : "text-[#5B5E8A]"
+                  }`}
+                >
+                  HR ({questions.hrQuestions.length})
+                </button>
+              </div>
+
+              <div className="mt-5 space-y-4">
+                {(activeTab === "technical"
+                  ? questions.technicalQuestions
+                  : questions.hrQuestions
+                ).map((item, index) => (
+                  <div
+                    key={index}
+                    className="rounded-xl border border-[#D9D6F5] p-4"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-mono text-xs text-[#6B6E96]">
+                        QUESTION {String(index + 1).padStart(2, "0")}
+                      </span>
+
+                      <span className="rounded-full bg-[#EEECFF] px-3 py-1 text-xs text-[#5B3FE0]">
+                        {activeTab === "technical"
+                          ? item.difficulty
+                          : item.category}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-3 text-sm font-medium leading-6">
+                      {item.question}
+                    </h3>
+
+                    <p className="mt-2 text-xs leading-5 text-[#5B5E8A]">
+                      {activeTab === "technical"
+                        ? `Topic: ${item.topic}`
+                        : `Relevance: ${item.relevance}`}
+                    </p>
+
+                    {activeTab === "technical" && (
+                      <p className="mt-1 text-xs leading-5 text-[#5B5E8A]">
+                        Relevance: {item.relevance}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>

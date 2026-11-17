@@ -172,7 +172,7 @@ const AnalysisHistory = () => {
               </button>
 
               <button
-                onClick={() => handleDelteReport(item._id)}
+                onClick={() => handleDeleteReport(item._id)}
                 className="h-10 rounded-lg border border-red-200 px-4 text-sm font-medium text-red-600 transition-[transform,background-color] hover:bg-red-50 active:scale-[0.98]"
               >
                 Delete report

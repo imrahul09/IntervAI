@@ -4,6 +4,7 @@ import {
   analyzeResume,
   getAnalysisHistory,
   getAnalysisById,
+  deleteAnalysis,
 } from "../controllers/analysisController.js";
 
 import { generateInterviewQuestions } from "../controllers/interviewController.js";
@@ -18,5 +19,7 @@ router.post(
   authMiddleware,
   generateInterviewQuestions,
 );
+
+router.delete("/:id", authMiddleware, deleteAnalysis);
 
 export default router;

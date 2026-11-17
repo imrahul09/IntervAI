@@ -34,6 +34,30 @@ const Shell = ({ onBack, children }) => (
   </div>
 );
 
+const handleDeleteReport = async (id) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this analysis report?",
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await API.delete(`/analysis/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setHistory((previousHistory) =>
+      previousHistory.filter((item) => item._id !== id),
+    );
+  } catch (error) {
+    console.error("Delete report error:", error);
+
+    setMessage(
+      error.response?.data?.message || "Failed to delete analysis report",
+    );
+  }
+};
+
 const AnalysisHistory = () => {
   const navigate = useNavigate();
   const { token } = useAuth();
@@ -145,6 +169,13 @@ const AnalysisHistory = () => {
                 className="h-10 rounded-lg border border-[#D9D6F5] px-4 text-sm font-medium text-[#14163A] transition-[transform,background-color] hover:bg-[#EEECFF] active:scale-[0.98]"
               >
                 View report
+              </button>
+
+              <button
+                onClick={() => handleDelteReport(item._id)}
+                className="h-10 rounded-lg border border-red-200 px-4 text-sm font-medium text-red-600 transition-[transform,background-color] hover:bg-red-50 active:scale-[0.98]"
+              >
+                Delete report
               </button>
             </li>
           ))}

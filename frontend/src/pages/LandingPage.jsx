@@ -9,6 +9,10 @@ const LandingPage = () => {
     navigate(isAuthenticated ? "/resume-upload" : "/login");
   };
 
+  const handleDashboardBtn = () => {
+    navigate(isAuthenticated ? "/dashboard" : "/login");
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#171d35]">
       {/*Navbar*/}
@@ -35,7 +39,7 @@ const LandingPage = () => {
             </li>
           </ul>
           <a
-            onClick={handleGetStarted}
+            onClick={handleDashboardBtn}
             class="bg-[#1125d8d7]  glow-btn rounded-xl px-[18px] py-2 text-[15px] font-medium text-white transition hover:-translate-y-px"
           >
             Dashboard

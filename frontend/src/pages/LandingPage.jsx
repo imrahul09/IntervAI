@@ -36,7 +36,13 @@ const LandingPage = () => {
           </ul>
           <a
             onClick={handleGetStarted}
-            class="bg-[#1125d8d7] glow-btn rounded-xl px-[18px] py-2 text-[15px] font-medium text-white transition hover:-translate-y-px"
+            class="bg-[#1125d8d7]  glow-btn rounded-xl px-[18px] py-2 text-[15px] font-medium text-white transition hover:-translate-y-px"
+          >
+            Dashboard
+          </a>
+          <a
+            onClick={handleGetStarted}
+            class="hidden md:bg-[#1125d8d7] glow-btn rounded-xl px-[18px] py-2 text-[15px] font-medium text-white transition hover:-translate-y-px"
           >
             Analyze my resume
           </a>
